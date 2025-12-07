@@ -21,7 +21,7 @@ import com.example.soap_project2.ws.Service
 class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var fabAdd: ExtendedFloatingActionButton
+    private lateinit var addAccountFab: ExtendedFloatingActionButton
     private val adapter = CompteAdapter()
     private val service = Service()
 
@@ -31,14 +31,14 @@ class MainActivity : AppCompatActivity() {
 
         // Initialisation des vues
         recyclerView = findViewById(R.id.recyclerView)
-        fabAdd = findViewById(R.id.fabAdd)
+        addAccountFab = findViewById(R.id.fabAdd)
 
         setupRecyclerView()
 
-        fabAdd.setOnClickListener { showAddDialog() }
+        addAccountFab.setOnClickListener { showAddAccountDialog() }
 
         // Chargement initial
-        loadData()
+        loadAccounts()
     }
 
     private fun setupRecyclerView() {
@@ -46,20 +46,20 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         // Listener sur le bouton supprimer
-        adapter.onDeleteClick = { compte ->
-            confirmDelete(compte)
+        adapter.onDeleteClick = { account ->
+            showDeleteConfirmationDialog(account)
         }
     }
 
-    private fun loadData() {
+    private fun loadAccounts() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val comptes = service.getComptes()
+                val accounts = service.fetchAccounts()
                 withContext(Dispatchers.Main) {
-                    if (comptes.isEmpty()) {
+                    if (accounts.isEmpty()) {
                         Toast.makeText(this@MainActivity, "Aucun compte trouvé ou erreur serveur", Toast.LENGTH_LONG).show()
                     }
-                    adapter.updateComptes(comptes)
+                    adapter.updateComptes(accounts)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -69,22 +69,52 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showAddDialog() {
+    private fun createAccount(balance: Double, accountType: TypeCompte) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = service.createAccount(balance, accountType)
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    Toast.makeText(this@MainActivity, "Compte créé avec succès", Toast.LENGTH_SHORT).show()
+                    loadAccounts()
+                } else {
+                    Toast.makeText(this@MainActivity, "Échec de la création", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun deleteAccount(account: Compte) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            if (account.id != null) {
+                val success = service.deleteAccount(account.id)
+                withContext(Dispatchers.Main) {
+                    if (success) {
+                        adapter.removeAccount(account)
+                        Toast.makeText(this@MainActivity, "Compte supprimé", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@MainActivity, "Erreur lors de la suppression", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showAddAccountDialog() {
         val dialogView = layoutInflater.inflate(R.layout.popup, null)
 
         MaterialAlertDialogBuilder(this)
             .setTitle("Nouveau Compte")
             .setView(dialogView)
             .setPositiveButton("Ajouter") { _, _ ->
-                val etSolde = dialogView.findViewById<TextInputEditText>(R.id.etSolde)
-                val radioCourant = dialogView.findViewById<RadioButton>(R.id.radioCourant)
+                val balanceEditText = dialogView.findViewById<TextInputEditText>(R.id.etSolde)
+                val checkingAccountRadioButton = dialogView.findViewById<RadioButton>(R.id.radioChecking)
 
-                val soldeStr = etSolde.text.toString()
-                if (soldeStr.isNotEmpty()) {
-                    val solde = soldeStr.toDoubleOrNull() ?: 0.0
-                    val type = if (radioCourant.isChecked) TypeCompte.COURANT else TypeCompte.EPARGNE
+                val balanceStr = balanceEditText.text.toString()
+                if (balanceStr.isNotEmpty()) {
+                    val balance = balanceStr.toDoubleOrNull() ?: 0.0
+                    val accountType = if (checkingAccountRadioButton.isChecked) TypeCompte.CHECKING else TypeCompte.SAVINGS
 
-                    createCompte(solde, type)
+                    createAccount(balance, accountType)
                 } else {
                     Toast.makeText(this, "Solde invalide", Toast.LENGTH_SHORT).show()
                 }
@@ -93,44 +123,14 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun createCompte(solde: Double, type: TypeCompte) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val success = service.createCompte(solde, type)
-            withContext(Dispatchers.Main) {
-                if (success) {
-                    Toast.makeText(this@MainActivity, "Compte créé avec succès", Toast.LENGTH_SHORT).show()
-                    loadData()
-                } else {
-                    Toast.makeText(this@MainActivity, "Échec de la création", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun confirmDelete(compte: Compte) {
+    private fun showDeleteConfirmationDialog(account: Compte) {
         MaterialAlertDialogBuilder(this)
             .setTitle("Confirmation")
-            .setMessage("Voulez-vous vraiment supprimer le compte N°${compte.id} ?")
+            .setMessage("Voulez-vous vraiment supprimer le compte N°${account.id} ?")
             .setPositiveButton("Supprimer") { _, _ ->
-                deleteCompte(compte)
+                deleteAccount(account)
             }
             .setNegativeButton("Annuler", null)
             .show()
-    }
-
-    private fun deleteCompte(compte: Compte) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            if (compte.id != null) {
-                val success = service.deleteCompte(compte.id)
-                withContext(Dispatchers.Main) {
-                    if (success) {
-                        adapter.removeCompte(compte)
-                        Toast.makeText(this@MainActivity, "Compte supprimé", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@MainActivity, "Erreur lors de la suppression", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
     }
 }

@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="Ajouter Compte"
+        android:text="@string/add_account"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/design_default_color_primary"
         app:icon="@android:drawable/ic_input_add"

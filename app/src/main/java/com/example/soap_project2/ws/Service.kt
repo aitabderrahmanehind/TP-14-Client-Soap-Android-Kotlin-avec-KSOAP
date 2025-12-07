@@ -18,13 +18,13 @@ class Service {
     private val NAMESPACE = "http://ws.demo.example.org/"
     private val URL = "http://192.168.1.48:8080/services/ws"
 
-    private val METHOD_GET_COMPTES = "getComptes"
-    private val METHOD_CREATE_COMPTE = "createCompte"
-    private val METHOD_DELETE_COMPTE = "deleteCompte"
+    private val GET_ACCOUNTS_METHOD = "getComptes"
+    private val CREATE_ACCOUNT_METHOD = "createCompte"
+    private val DELETE_ACCOUNT_METHOD = "deleteCompte"
 
-    fun getComptes(): List<Compte> {
-        val comptes = mutableListOf<Compte>()
-        val request = SoapObject(NAMESPACE, METHOD_GET_COMPTES)
+    fun fetchAccounts(): List<Compte> {
+        val accountList = mutableListOf<Compte>()
+        val request = SoapObject(NAMESPACE, GET_ACCOUNTS_METHOD)
         val envelope = SoapSerializationEnvelope(SoapEnvelope.VER11)
         envelope.dotNet = false
         envelope.setOutputSoapObject(request)
@@ -44,20 +44,20 @@ class Service {
             for (i in 0 until response.propertyCount) {
                 val property = response.getProperty(i)
                 if (property is SoapObject) {
-                    val compte = parseSoapToCompte(property)
-                    comptes.add(compte)
+                    val account = parseSoapToAccount(property)
+                    accountList.add(account)
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return comptes
+        return accountList
     }
 
-    fun createCompte(solde: Double, type: TypeCompte): Boolean {
-        val request = SoapObject(NAMESPACE, METHOD_CREATE_COMPTE)
-        request.addProperty("solde", solde.toString())
-        request.addProperty("type", type.name)
+    fun createAccount(balance: Double, accountType: TypeCompte): Boolean {
+        val request = SoapObject(NAMESPACE, CREATE_ACCOUNT_METHOD)
+        request.addProperty("solde", balance.toString())
+        request.addProperty("type", accountType.name)
 
         val envelope = SoapSerializationEnvelope(SoapEnvelope.VER11)
         envelope.dotNet = false
@@ -73,9 +73,9 @@ class Service {
         }
     }
 
-    fun deleteCompte(id: Long): Boolean {
-        val request = SoapObject(NAMESPACE, METHOD_DELETE_COMPTE)
-        request.addProperty("id", id)
+    fun deleteAccount(accountId: Long): Boolean {
+        val request = SoapObject(NAMESPACE, DELETE_ACCOUNT_METHOD)
+        request.addProperty("id", accountId)
 
         val envelope = SoapSerializationEnvelope(SoapEnvelope.VER11)
         envelope.dotNet = false
@@ -91,22 +91,22 @@ class Service {
         }
     }
 
-    private fun parseSoapToCompte(soapObject: SoapObject): Compte {
+    private fun parseSoapToAccount(soapObject: SoapObject): Compte {
         val id = soapObject.getPropertySafely("id").toString().toLongOrNull()
-        val solde = soapObject.getPropertySafely("solde").toString().toDoubleOrNull() ?: 0.0
-        val dateStr = soapObject.getPropertySafely("dateCreation")
+        val balance = soapObject.getPropertySafely("solde").toString().toDoubleOrNull() ?: 0.0
+        val creationDateStr = soapObject.getPropertySafely("dateCreation")
 
         // Gestion robuste de la date (prend les 10 premiers caractères yyyy-MM-dd)
-        val date = try {
+        val creationDate = try {
             // Convert the result of take(10) to a String before parsing
-            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr.toString().take(10))
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(creationDateStr.toString().take(10))
         } catch (e: Exception) { Date() }
 
-        val typeStr = soapObject.getPropertySafely("type")
+        val accountTypeStr = soapObject.getPropertySafely("type")
         // Note: The 'as String' cast here is redundant since getPropertySafely already returns a String.
-        val type = try { TypeCompte.valueOf(typeStr as String) } catch(e:Exception) { TypeCompte.COURANT }
+        val accountType = try { TypeCompte.valueOf(accountTypeStr as String) } catch(e:Exception) { TypeCompte.CHECKING }
 
-        return Compte(id, solde, date ?: Date(), type)
+        return Compte(id, balance, creationDate ?: Date(), accountType)
     }
 
     private fun SoapObject.getPropertySafely(name: String): String {

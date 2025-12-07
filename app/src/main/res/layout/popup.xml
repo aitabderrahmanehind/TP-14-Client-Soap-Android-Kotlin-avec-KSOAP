@@ -8,7 +8,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Solde initial (DH)"
+        android:hint="Initial Balance (DH)"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Type de compte"
+        android:text="Account Type"
         android:layout_marginTop="16dp"
         android:textStyle="bold"/>
 
@@ -30,20 +30,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:orientation="horizontal">
+        android.orientation="horizontal">
 
         <RadioButton
-            android:id="@+id/radioCourant"
+            android:id="@+id/radioChecking"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="COURANT"
+            android:text="CHECKING"
             android:checked="true"/>
 
         <RadioButton
-            android:id="@+id/radioEpargne"
+            android:id="@+id/radioSavings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:text="EPARGNE" />
+            android:text="SAVINGS" />
     </RadioGroup>
 </LinearLayout>

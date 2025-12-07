@@ -15,19 +15,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class CompteAdapter : RecyclerView.Adapter<CompteAdapter.CompteViewHolder>() {
-    private var comptes = mutableListOf<Compte>()
+    private var accounts = mutableListOf<Compte>()
     var onDeleteClick: ((Compte) -> Unit)? = null
 
-    fun updateComptes(newComptes: List<Compte>) {
-        comptes.clear()
-        comptes.addAll(newComptes)
+    fun updateComptes(newAccounts: List<Compte>) {
+        accounts.clear()
+        accounts.addAll(newAccounts)
         notifyDataSetChanged()
     }
 
-    fun removeCompte(compte: Compte) {
-        val index = comptes.indexOfFirst { it.id == compte.id }
+    fun removeAccount(account: Compte) {
+        val index = accounts.indexOfFirst { it.id == account.id }
         if (index != -1) {
-            comptes.removeAt(index)
+            accounts.removeAt(index)
             notifyItemRemoved(index)
         }
     }
@@ -38,28 +38,28 @@ class CompteAdapter : RecyclerView.Adapter<CompteAdapter.CompteViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: CompteViewHolder, position: Int) {
-        holder.bind(comptes[position])
+        holder.bind(accounts[position])
     }
 
-    override fun getItemCount() = comptes.size
+    override fun getItemCount() = accounts.size
 
     inner class CompteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val idTxt: TextView = view.findViewById(R.id.textId)
-        private val soldeTxt: TextView = view.findViewById(R.id.textSolde)
-        private val typeChip: Chip = view.findViewById(R.id.textType)
-        private val dateTxt: TextView = view.findViewById(R.id.textDate)
-        private val btnDelete: ImageButton = view.findViewById(R.id.btnDelete)
+        private val idTextView: TextView = view.findViewById(R.id.textId)
+        private val balanceTextView: TextView = view.findViewById(R.id.textSolde)
+        private val typeChipView: Chip = view.findViewById(R.id.textType)
+        private val dateTextView: TextView = view.findViewById(R.id.textDate)
+        private val deleteButton: ImageButton = view.findViewById(R.id.btnDelete)
 
-        fun bind(compte: Compte) {
-            idTxt.text = "Compte N° ${compte.id}"
-            soldeTxt.text = "${compte.solde} DH"
-            typeChip.text = compte.type.name
+        fun bind(account: Compte) {
+            idTextView.text = "Compte N° ${account.id}"
+            balanceTextView.text = "${account.balance} DH"
+            typeChipView.text = account.accountType.name
 
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            dateTxt.text = "Créé le : ${sdf.format(compte.dateCreation)}"
+            dateTextView.text = "Créé le : ${sdf.format(account.creationDate)}"
 
-            btnDelete.setOnClickListener {
-                onDeleteClick?.invoke(compte)
+            deleteButton.setOnClickListener {
+                onDeleteClick?.invoke(account)
             }
         }
     }
